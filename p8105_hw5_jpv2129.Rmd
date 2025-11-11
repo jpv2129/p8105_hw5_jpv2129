@@ -82,7 +82,7 @@ sim_mu0 =
   unnest(cols = c(results))
 
 
-#Part 1, displaying results
+#Part 1, checking model
 
 sim_mu0 |>
   summarize(
@@ -120,5 +120,62 @@ sim_results |>
   group_by(mu) |> 
   summarize(power = mean(p.value < 0.05))
 ```
+
+Plotting power vs mu
+```{r}
+power_df =
+  sim_results |>
+  group_by(mu) |>
+  summarize(
+    power = mean(p.value < 0.05),
+    .groups = "drop"
+  )
+
+power_df |>
+  ggplot(aes(x = mu, y = power)) +
+  geom_point(size = 3) +
+  geom_line(linewidth = 1) +
+  scale_y_continuous(limits = c(0, 1), labels = scales::percent_format()) +
+  labs(
+    title = "Empirical Power vs True Mean (μ)",
+    x = "True Mean (μ)",
+    y = "Power (Proportion Rejecting H₀)"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+Describe the association between effect size and power:
+
+
+Make a plot showing the average estimate of 𝜇̂ on the y axis and the true value of 𝜇on the x axis with overlay on the first the average estimate of 𝜇̂ only in samples for which the null was rejected on the y axis and the true value of 𝜇on the x axis.
+
+```{r}
+bias_df =
+  sim_results |>
+  group_by(mu) |>
+  summarize(
+    mean_est_all = mean(estimate),
+    mean_est_sig = mean(estimate[p.value < 0.05]),
+    .groups = "drop"
+  )
+
+bias_df
+
+bias_df |>
+  ggplot(aes(x = mu)) +
+  geom_line(aes(y = mean_est_all, color = "All tests"), linewidth = 1) +
+  geom_point(aes(y = mean_est_all, color = "All tests"), size = 2) +
+  geom_line(aes(y = mean_est_sig, color = "Rejected H₀ only"), linewidth = 1) +
+  geom_point(aes(y = mean_est_sig, color = "Rejected H₀ only"), size = 2) +
+  labs(
+    title = "Average Estimated Mean (μ̂) vs True Mean (μ)",
+    x = "True Mean (μ)",
+    y = "Average Estimate (μ̂)",
+    color = ""
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+
 
 
