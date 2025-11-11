@@ -6,6 +6,7 @@ output: github_document
 ---
 
 ```{r}
+library(broom)
 library(tidyverse)
 set.seed(1)
 ```
@@ -55,5 +56,69 @@ bday_sim_results |>
 
 Comments:
 The plot shows that the probability that at least two people share a birthday increases quickly as the number of people in the room grows. When only a few people are present the chance of a shared birthday is very small but the probability rises sharply as the group becomes larger. Around twenty three people the probability reaches about fifty percent and by forty people it is close to one hundred percent. This finding illustrates the birthday paradox where even small groups have a surprisingly high chance of sharing a birthday because the number of possible pairs increases rapidly with group size.
+
+## Question 2
+
+Part 1, mu = 0
+
+```{r}
+#Setting the design elements
+n = 30        # sample size
+sigma = 5     # population SD
+mu = 0        # true mean
+n_sims = 5000 # number of simulated datasets
+
+#Part 1, simulate 5000 datasets and test H0: mu=0
+sim_mu0 =
+  tibble(iter = 1:n_sims) |>
+  mutate(
+    results = map(iter, \(i) {
+      tibble(x = rnorm(n, mean = mu, sd = sigma)) |>
+        summarize(test = list(tidy(t.test(x, mu = 0)))) |>
+        unnest(cols = c(test)) |>
+        select(estimate, p.value)
+    })
+  ) |>
+  unnest(cols = c(results))
+
+
+#Part 1, displaying results
+
+sim_mu0 |>
+  summarize(
+    avg_mu_hat = mean(estimate),
+    sd_mu_hat  = sd(estimate),
+    type1error_rate = mean(p.value < 0.05)
+  )
+```
+
+Part 2, mu = 1:6
+```{r}
+n = 30
+sigma = 5
+mu_values = 1:6
+n_sims = 5000
+
+# Repeat simulation for each μ
+sim_results =
+  map_df(mu_values, \(m) {
+    tibble(iter = 1:n_sims) |>
+      mutate(
+        results = map(iter, \(i) {
+          tibble(x = rnorm(n, mean = m, sd = sigma)) |>
+            summarize(test = list(tidy(t.test(x, mu = 0)))) |>
+            unnest(cols = c(test)) |>
+            select(estimate, p.value)
+        })
+      ) |>
+      unnest(cols = c(results)) |>
+      mutate(mu = m)
+  })
+
+# Check one example
+sim_results |> 
+  group_by(mu) |> 
+  summarize(power = mean(p.value < 0.05))
+```
 
 
