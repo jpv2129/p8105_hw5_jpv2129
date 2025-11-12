@@ -175,6 +175,41 @@ bias_df |>
   ) +
   theme_minimal(base_size = 14)
 ```
+ Is the sample average of 𝜇̂ across tests for which the null is rejected approximately equal to the true value of 𝜇? Why or why not?
+ 
+ 
+ ## Problem 3
+ 
+ Loading the data
+```{r}
+homicides <- read_csv("https://raw.githubusercontent.com/washingtonpost/data-homicides/master/homicide-data.csv")
+```
+Description of data:
+This is a large dataset containing 52,179 observations and 12 different variables.
+The dataset looks at the date of the victim's homicide, the victim's name, where the homicide occurred, and the case status of the homicide. It also includes demographics of the victims like age and sex.
+
+Starting to clean and summarize
+```{r}
+#creating city_state
+homicides = homicides |> 
+  mutate(
+    city_state = str_c(city, ", ", state)
+  )
+
+# summarise totals and unsolved by city
+city_summary <- homicides |> 
+  group_by(city_state) |> 
+  summarize(
+    total_homicides = n(),
+    unsolved_homicides = sum(disposition %in% c("Closed without arrest", "Open/No arrest"), na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  arrange(desc(total_homicides))
+
+city_summary
+```
+
+ 
 
 
 
